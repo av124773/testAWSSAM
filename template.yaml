@@ -27,7 +27,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - secretsmanager:GetSecretValue
-                Resource:arn: arn:aws:secretsmanager:us-east-1:199310884822:secret:prod/testAWSSAM/test-key-3N5hAV
+                Resource: arn:aws:secretsmanager:us-east-1:199310884822:secret:prod/testAWSSAM/test-key-3N5hAV
 
       Events:
         HelloWorld:
