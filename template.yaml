@@ -20,8 +20,15 @@ Resources:
       Architectures:
         - x86_64
       Policies:
-        - SecretsManagerReadPolicy:
-          SecretId: "prod/testAWSSAM/test-key-3N5hAV"
+        - PolicyName: ReadSpecificSecret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager: GetSecretValue
+                Resource:arn: aws:secretsmanager:us-east-1:199310884822:secret:prod/testAWSSAM/test-key-3N5hAV
+
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
