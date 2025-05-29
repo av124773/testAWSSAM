@@ -19,6 +19,9 @@ Resources:
       Runtime: python3.13
       Architectures:
         - x86_64
+      Policies:
+        - SecretsManagerReadPolicy:
+          SecretId: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
