@@ -47,9 +47,9 @@ Resources:
   ConversationTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: AIChatroomConversations 
+      TableName: AIChatroomConversations
       AttributeDefinitions: # 屬性定義
-        - AttributeName: conversation_id 
+        - AttributeName: conversation_id
           AttributeType: S # String
       KeySchema: # 主鍵定義
         - AttributeName: conversation_id
