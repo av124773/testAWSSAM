@@ -51,7 +51,7 @@ Resources:
       AttributeDefinitions: # 屬性定義
         - AttributeName: conversation_id 
           AttributeType: S # String
-      KeyScheme: # 主鍵定義
+      KeySchema: # 主鍵定義
         - AttributeName: conversation_id
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST # 按需計費模式 (On-demand)
