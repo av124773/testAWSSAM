@@ -23,12 +23,38 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: 
                 !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
+        - DynamoDBCrudPolicy: 
+            TableName: !Ref ConversationTalbe 
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello
-            Method: get
+            Path: /{proxy+}
+            Method: ANY
+            RestApiId: !Ref AIXhatroomApiGateway
+
+  # 顯示定義 API Gateway
+  AIChatroomApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api_Key,X-Amz-Security-Token'"
+        AllowMethods: "'GET,POST,OPTIONS'"
+
+  # 定義 DynamoDB 表
+  ConversationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: AIChatroomConversations 
+      AttributeDefinitions: # 屬性定義
+        - AttributeName: conversation_id 
+          AttributeType: S # String
+      KeyScheme: # 主鍵定義
+        - AttributeName: conversation_id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST # 按需計費模式 (On-demand)
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -43,3 +69,6 @@ Outputs:
   HelloWorldFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
     Value: !GetAtt HelloWorldFunctionRole.Arn
+  AIChatroomTableArn:
+    Description: "DynamoDB Conversation Table ARN"
+    Value: !GetAtt ConversationTable.Arn
