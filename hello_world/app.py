@@ -1,4 +1,5 @@
 import json
+import uuid
 import boto3
 from botocore.exceptions import ClientError
 from datetime import datetime, timezone
@@ -57,10 +58,10 @@ def handle_new_message(event):
         conversation_id = body.get('conversation_id')
         user_message = body.get('message', '')
 
-        if conversation_id is None:
+        if conversation_id is None of conversation_id == "":
             # 新對話
             print("Request received for a NEW conversation.")
-            conversation_id = str(uuid,uuid4())
+            conversation_id = str(uuid.uuid4())
             # 假裝AI回復(暫)
             reply_message = f"成功創建新對話。你的訊息是: '{user_message}'"
         else:
@@ -82,11 +83,11 @@ def handle_new_message(event):
             },
             'body': json.dumps(response_body)
         }
-    
+
     except Exception as e:
         print(f"Error: {e}")
         return {
-            'statusCode': 200,
+            'statusCode': 500,
             'body': json.dumps({'error': 'Internal Server Error', 'details': str(e)})
         }
 
