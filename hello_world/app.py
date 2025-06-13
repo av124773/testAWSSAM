@@ -1,6 +1,7 @@
 import json
-import boto3 
+import boto3
 from botocore.exceptions import ClientError
+from datetime import datetime, timezone
 
 # import requests
 
@@ -30,43 +31,37 @@ def get_secret():
     return secret
 
 
-def lambda_handler(event, context):
-    """Sample pure Lambda function
+def handle_get_hello(event):
+    """ 處理測試點 GET /hello """
+    print("Health check endpoint /hello was called.")
 
-    Parameters
-    ----------
-    event: dict, required
-        API Gateway Lambda Proxy Input Format
-
-        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-        Context doc: https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
-
-    Returns
-    ------
-    API Gateway Lambda Proxy Output Format: dict
-
-        Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-    """
-
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
-
-    #     raise e
-
-    
+    response_body = {
+        'message': 'Hello from your AI Chatroom backend.',
+        'status': 'OK',
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    }
 
     return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "hello world",
-            "secret": get_secret(),
-            # "location": ip.text.replace("\n", "")
-        }),
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps(response_body)
+    }
+
+def lambda_handler(event, context):
+    """ Lambda 主要進入點，這裡負責將請求陸游到正確的處理函式 """
+
+    print(f"Received event: {json.dumps(event)}")
+
+    http_method = event.get('httpMethod')
+    path = event.get('path')
+
+    if http_method == 'GET' and path == '/hello':
+        return handle_get_hello(event)
+
+    return {
+        "statusCode": 404,
+        "body": json.dumps({"error": "Not Found"})
     }
