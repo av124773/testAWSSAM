@@ -58,7 +58,7 @@ def handle_new_message(event):
         conversation_id = body.get('conversation_id')
         user_message = body.get('message', '')
 
-        if conversation_id is None of conversation_id == "":
+        if conversation_id is None or conversation_id == "":
             # 新對話
             print("Request received for a NEW conversation.")
             conversation_id = str(uuid.uuid4())
