@@ -4,6 +4,10 @@ import boto3
 from botocore.exceptions import ClientError
 from datetime import datetime, timezone
 
+# --- 全域變數 ---
+OPENAI_API_KEY_SECRET_NAME = os.environ.get("OPENAI_API_KEY_SECRET_NAME")
+AWS_REGION_NAME = os.environ.get("AWS_REGION_NAME")
+
 def get_secret():
     secret_name = "prod/testAWSSAM/test-key"
     region_name = "us-east-1"
@@ -22,7 +26,9 @@ def handle_get_hello(event):
     response_body = {
         'message': 'Hello from your AI Chatroom backend. And test.',
         'status': 'OK',
-        'timestamp': datetime.now(timezone.utc).isoformat()
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'OPENAI_API_KEY_SECRET_NAME': OPENAI_API_KEY_SECRET_NAME,
+        'AWS_REGION_NAME': AWS_REGION_NAME
     }
     return {
         'statusCode': 200,
