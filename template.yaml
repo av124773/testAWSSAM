@@ -19,7 +19,7 @@ Resources:
       Runtime: python3.10
       Architectures:
         - x86_64
-      Enviroment:
+      Environment:
         Variables:
           DYNAMODB_TABLE_NAME: !Ref ConversationTable
           OPENAI_API_KEY_SECRET_NAME: "prod/testAWSSAM/test-key"
