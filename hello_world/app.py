@@ -59,7 +59,7 @@ def handle_get_hello(event):
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'OPENAI_API_KEY_SECRET_NAME': OPENAI_API_KEY_SECRET_NAME,
         'AWS_REGION_NAME': AWS_REGION_NAME,
-        'OPENAI_RESPONSE': openai_response
+        'OPENAI_RESPONSE': openai_response.output_text
     }
     return {
         'statusCode': 200,
