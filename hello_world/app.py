@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import boto3
+import openai
 from botocore.exceptions import ClientError
 from datetime import datetime, timezone
 
