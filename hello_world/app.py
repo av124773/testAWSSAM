@@ -51,7 +51,7 @@ def handle_get_hello(event):
     client = get_openai_client()
     openai_response = client.responses.create(
         model="gpt-4.1",
-        imput="請幫我寫出'木蘭詞'的內容。"
+        input="請幫我寫出'木蘭詞'的內容。"
     )
     response_body = {
         'message': 'Hello from your AI Chatroom backend. And test.',
