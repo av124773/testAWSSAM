@@ -51,7 +51,7 @@ def handle_get_hello(event):
     client = get_openai_client()
     openai_response = client.responses.create(
         model="gpt-4.1",
-        input="請幫我寫出'木蘭詞'的內容。"
+        input="請幫我寫出'靜夜思'的內容。"
     )
     response_body = {
         'message': 'Hello from your AI Chatroom backend. And test.',
@@ -67,28 +67,55 @@ def handle_get_hello(event):
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
         },
-        'body': json.dumps(response_body)
+        'body': json.dumps(response_body, ensure_ascii=False)
     }
 
 def handle_new_message(event):
     """ 處理創建新對話 POST /message """
     try:
         body = json.loads(event.get('body', '{}'))
+        user_id = body.get('user_id')
         conversation_id = body.get('conversation_id')
         user_message = body.get('message', '')
+        
+        if not user_id or not user_message:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'user_id and message are required!'})}
+        
+        previous_response_id = None
+        is_new_conversation = not conversation_id
 
-        if conversation_id is None or conversation_id == "":
-            # 新對話
-            print("Request received for a NEW conversation.")
+        if is_new_conversation:
+            print(f"User '{user_id}' is starting a NEW conversation.")
             conversation_id = str(uuid.uuid4())
-            reply_message = f"成功創建新對話。你的訊息是: '{user_message}'"
-        else:
-            # 既有對話
-            print(f"Request received for EXISTING conversation: {conversation_id}")
-            reply_message = f"對話ID: '{conversation_id}' 中收到訊息: '{user_message}'"
+        else: 
+            print(f"User '{user_id}' is continuing conversation '{conversation_id}.'")
+            '''
+            預計新增功能:
+                這裡之後會加上讀取 DynamoDB 取得 openAI 對話 ID
+            '''
+        
+        client = get_openai_client()
+        print("Calling OpenAI Responses API...")
+        response_from_openai = client.responses.create(
+            model="gpt-4o",
+            input=user_message,
+            store=True,
+            previous_response_id=previous_response_id 
+        )
 
+        latest_response_id = response_from_openai.id
+        reply_message = response_from_openai.reply
+
+        print(f"Received reply from OpenAI. New response ID: {latest_response_id}")
+
+        '''
+        預計新增功能:
+            如果是新對話的話就儲存至 DynamoDB
+            如果是既有對話就更新
+        '''
         response_body = {
             'conversation_id': conversation_id,
+            'response_id': latest_response_id,
             'reply': reply_message
         }
         return {
@@ -97,7 +124,7 @@ def handle_new_message(event):
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            'body': json.dumps(response_body)
+            'body': json.dumps(response_body, ensure_ascii=False)
         }
     except Exception as e:
         print(f"Error: {e}")
