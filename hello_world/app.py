@@ -104,7 +104,7 @@ def handle_new_message(event):
         )
 
         latest_response_id = response_from_openai.id
-        reply_message = response_from_openai.reply
+        reply_message = response_from_openai.output_text
 
         print(f"Received reply from OpenAI. New response ID: {latest_response_id}")
 
