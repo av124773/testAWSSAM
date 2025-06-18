@@ -89,6 +89,10 @@ def handle_new_message(event):
             conversation_id = str(uuid.uuid4())
         else: 
             print(f"User '{user_id}' is continuing conversation '{conversation_id}.'")
+            
+            # 暫時直接從 body 取得 openAI 對話ID
+            # 之後會從 DynamoBD 裡取得
+            previous_response_id = body.get("response_id")
             '''
             預計新增功能:
                 這裡之後會加上讀取 DynamoDB 取得 openAI 對話 ID
