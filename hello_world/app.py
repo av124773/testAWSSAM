@@ -117,7 +117,7 @@ def handle_new_message(event):
                 ExpressionAttributeNames={
                     '#resp_id': 'latest_response_id',
                     '#updated_at': 'last_updated_at'
-                }
+                },
                 ExpressionAttributeValues={
                     ':r': latest_response_id,
                     ':u': current_timestamp
