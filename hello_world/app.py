@@ -6,9 +6,12 @@ import openai
 from botocore.exceptions import ClientError
 from datetime import datetime, timezone
 
+DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
 OPENAI_API_KEY_SECRET_NAME = os.environ.get("OPENAI_API_KEY_SECRET_NAME")
 AWS_REGION_NAME = os.environ.get("AWS_REGION_NAME")
 
+dynamodb_resource = boto3.resource('dynamodb')
+table = dynamodb_resource.Table(DYNAMODB_TABLE_NAME)
 openai_client = None
 
 def get_openai_client():
@@ -35,18 +38,13 @@ def get_openai_client():
 def handle_get_hello(event):
     """ 處理測試點 GET /hello """
     print("Health check endpoint /hello was called.")
-    client = get_openai_client()
-    openai_response = client.responses.create(
-        model="gpt-4.1",
-        input="請幫我寫出'靜夜思'的內容。"
-    )
+    
     response_body = {
         'message': 'Hello from your AI Chatroom backend. And test.',
         'status': 'OK',
         'timestamp': datetime.now(timezone.utc).isoformat(),
         'OPENAI_API_KEY_SECRET_NAME': OPENAI_API_KEY_SECRET_NAME,
-        'AWS_REGION_NAME': AWS_REGION_NAME,
-        'OPENAI_RESPONSE': openai_response.output_text
+        'AWS_REGION_NAME': AWS_REGION_NAME
     }
     return {
         'statusCode': 200,
@@ -76,14 +74,13 @@ def handle_new_message(event):
             conversation_id = str(uuid.uuid4())
         else: 
             print(f"User '{user_id}' is continuing conversation '{conversation_id}.'")
-            
-            # 暫時直接從 body 取得 openAI 對話ID
-            # 之後會從 DynamoBD 裡取得
-            previous_response_id = body.get("response_id")
-            '''
-            預計新增功能:
-                這裡之後會加上讀取 DynamoDB 取得 openAI 對話 ID
-            '''
+            response = table.get_item(Key={'conversation_id': conversation_id})
+            if 'Item' in response:
+                previous_response_id = response['Item'].get('latest_response_id')
+                print(f"Found previous response ID: {previous_response_id}")
+            else:
+                is_new_conversation = True
+                print(f"Warning: conversation_id '{conversation_id}' not found. Treating as new.")
         
         client = get_openai_client()
         print("Calling OpenAI Responses API...")
@@ -99,11 +96,34 @@ def handle_new_message(event):
 
         print(f"Received reply from OpenAI. New response ID: {latest_response_id}")
 
-        '''
-        預計新增功能:
-            如果是新對話的話就儲存至 DynamoDB
-            如果是既有對話就更新
-        '''
+        current_timestamp = datetime.now(timezone.utc).isoformat()
+        if is_new_conversation:
+            title = user_message[:20] + '...' if len(user_message) > 20 else user_message
+            table.put_item(
+                Item={
+                    'conversation_id': conversation_id,
+                    'user_id': user_id,
+                    'latest_response_id': latest_response_id,
+                    'title': title,
+                    'created_at': current_timestamp,
+                    'last_updated_at': current_timestamp
+                }
+            )
+            print(f"Created new conversation metadata in DynamoDB for conversation '{conversation_id}'.")
+        else:
+            table.update_item(
+                Key={'conversation_id': conversation_id},
+                UpdateExpression="set #resp_id = :r, #updated_at = :u",
+                ExpressionAttributeNames={
+                    '#resp_id': 'latest_response_id',
+                    '#updated_at': 'last_updated_at'
+                }
+                ExpressionAttributeValues={
+                    ':r': latest_response_id,
+                    ':u': current_timestamp
+                }
+            )
+
         response_body = {
             'conversation_id': conversation_id,
             'response_id': latest_response_id,
