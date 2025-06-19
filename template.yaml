@@ -60,12 +60,25 @@ Resources:
     Properties:
       TableName: !Sub "AIChatroomConversations-${AWS::StackName}"
       AttributeDefinitions: # 屬性定義
-        - AttributeName: conversation_id
+        - AttributeName: conversation_id # 主鍵
           AttributeType: S # String
+        - AttributeName: user_id         # GSI 的主鍵
+          AttributeType: S
+        - AttributeName: last_updated_at # GSI 的排序鍵
+          AttributeType: S
       KeySchema: # 主鍵定義
         - AttributeName: conversation_id
-          KeyType: HASH
+          KeyType: HASH # HASH = 分區索引鍵 (Partition Key)
       BillingMode: PAY_PER_REQUEST # 按需計費模式 (On-demand)
+      GlobalSecondaryIndexes: # <-- GSI，用於查詢使用者的所有對話
+        - IndexName: user-id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH # HASH = 分區索引鍵 (Partition Key)
+            - AttributeName: last_updated_at
+              KeyType: RANGE # RANGE = 排序索引鍵 (Sort Key)
+          Projection:
+            ProjectionType: ALL # 將所有屬性都複製到索引中，方便查詢
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
