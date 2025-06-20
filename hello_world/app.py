@@ -5,6 +5,7 @@ import boto3
 import openai
 from botocore.exceptions import ClientError
 from datetime import datetime, timezone
+from boto3.dynamodb.conditions import Key
 
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME")
 OPENAI_API_KEY_SECRET_NAME = os.environ.get("OPENAI_API_KEY_SECRET_NAME")
@@ -54,6 +55,39 @@ def handle_get_hello(event):
         },
         'body': json.dumps(response_body, ensure_ascii=False)
     }
+
+def handle_get_conversations(event):
+    """ 處理取得對話紀錄 GET /conversations?user_id... """
+    print("Handling request to get conversation list.")
+    try:
+        query_params = event.get('queryStringParameters', {})
+        user_id = query_params.get('user_id')
+
+        if not user_id:
+            return {'statusCode': 400, 'body': json.dumps({'error': 'user_id query parameter is required.'})}
+
+        print(f"Querying conversations for user_id: {user_id}")
+
+        response = table.query(
+            IndexName='user-id-index',
+            KeyConditionExpression=Key('user_id').eq(user_id),
+            ScanIndexForward=False
+        )
+
+        items = response.get('Items', [])
+        print(f"Found {len(items)} conversations.")
+
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps(items, ensure_ascii=False)
+        }
+    except Exception as e:
+        print(f"Error in handle_get_conversations: {e}")
+        return {'statusCode': 500, 'body': json.dumps({'error': 'Internal Server Error', 'details': str(e)})}
 
 def handle_new_message(event):
     """ 處理創建新對話 POST /message """
@@ -152,6 +186,9 @@ def lambda_handler(event, context):
 
     if http_method == 'GET' and path == '/hello':
         return handle_get_hello(event)
+    
+    if http_method == 'GET' and path == '/conversations':
+        return handle_get_conversations(event)
 
     if http_method == 'POST' and path == '/message':
         return handle_new_message(event)

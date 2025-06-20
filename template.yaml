@@ -43,6 +43,12 @@ Resources:
             Path: /message
             Method: post
             RestApiId: !Ref AIChatroomApiGateway
+        GetConversations:
+          Type: Api
+          Properties:
+            Path: /conversations
+            Method: get
+            RestApiId: !Ref AIChatroomApiGateway
 
   # 顯示定義 API Gateway
   AIChatroomApiGateway:
