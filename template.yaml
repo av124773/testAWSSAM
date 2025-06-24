@@ -100,7 +100,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !GetAtt AIChatroomApiGateway.ApiEndpoint
+    Value: !Sub "https://${AIChatroomApiGateway}.execute-api.${AWS::Region}.amazonaws.com/hello"
   HelloWorldFunction:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn
