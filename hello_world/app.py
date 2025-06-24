@@ -89,8 +89,15 @@ def handle_get_conversations(event):
         print(f"Error in handle_get_conversations: {e}")
         return {'statusCode': 500, 'body': json.dumps({'error': 'Internal Server Error', 'details': str(e)})}
 
-def handle_new_message_stream(event, response_stream):
-    """ 處理創建新對話 POST /message """
+def handle_new_message_stream(event):
+    """ 
+    處理創建新對話 POST /message 
+    使用 yield 建立產生器函式，用來串流(stream)回覆
+    """
+    latest_response_id = None
+    conversation_id = None
+    is_new_conversation = False
+
     try:
         body = json.loads(event.get('body', '{}'))
         user_id = body.get('user_id')
@@ -98,8 +105,7 @@ def handle_new_message_stream(event, response_stream):
         user_message = body.get('message', '')
         
         if not user_id or not user_message:
-            error_msg = json.dumps({'error': 'user_id and message are required!'})
-            response_stream.write(error_msg.encode('utf-8'))
+            yield json.dumps({'error': 'user_id and message are required!'}).encode('utf-8')
             return
 
         previous_response_id = None
@@ -133,83 +139,64 @@ def handle_new_message_stream(event, response_stream):
                 for block in chunk.output.content:
                     if block.type == 'text_delta' and block.text_delta and block.text_delta.value:
                         text_chunk = block.text_delta.value
-                        response_stream.write(text_chunk.encode('utf-8'))
+                        yield text_chunk.encode('utf-8')
         
         final_response = stream.get_final_response()
         latest_response_id = final_response.id
-        print(f"Stream finished. Final response ID: {latest_response_id}")
-
-        current_timestamp = datetime.now(timezone.utc).isoformat()
-        if is_new_conversation:
-            title = user_message[:20] + '...' if len(user_message) > 20 else user_message
-            table.put_item(
-                Item={
-                    'conversation_id': conversation_id,
-                    'user_id': user_id,
-                    'latest_response_id': latest_response_id,
-                    'title': title,
-                    'created_at': current_timestamp,
-                    'last_updated_at': current_timestamp
-                }
-            )
-            print(f"Created new conversation metadata in DynamoDB for conversation '{conversation_id}'.")
-        else:
-            table.update_item(
-                Key={'conversation_id': conversation_id},
-                UpdateExpression="set #resp_id = :r, #updated_at = :u",
-                ExpressionAttributeNames={
-                    '#resp_id': 'latest_response_id',
-                    '#updated_at': 'last_updated_at'
-                },
-                ExpressionAttributeValues={
-                    ':r': latest_response_id,
-                    ':u': current_timestamp
-                }
-            )
-
+        
     except Exception as e:
         print(f"Error in stream: {e}")
-        error_msg = json.dumps({'error': 'Internal Server Error', 'details': str(e)})
-        response_stream.write(error_msg.encode('utf-8'))
+        yield json.dumps({'error': 'An error occurred during streaming.'}).encode('utf-8')
+
+    finally:
+        if latest_response_id and conversation_id:
+            print(f"Stream finished. Final response ID: {latest_response_id}. Updating DB...")
+            current_timestamp = datetime.now(timezone.utc).isoformat()
+            if is_new_conversation:
+                title = user_message[:20] + '...' if len(user_message) > 20 else user_message
+                table.put_item(
+                    Item={
+                        'conversation_id': conversation_id,
+                        'user_id': user_id,
+                        'latest_response_id': latest_response_id,
+                        'title': title,
+                        'created_at': current_timestamp,
+                        'last_updated_at': current_timestamp
+                    }
+                )
+                print(f"Created new conversation metadata in DynamoDB for conversation '{conversation_id}'.")
+            else:
+                table.update_item(
+                    Key={'conversation_id': conversation_id},
+                    UpdateExpression="set #resp_id = :r, #updated_at = :u",
+                    ExpressionAttributeNames={
+                        '#resp_id': 'latest_response_id',
+                        '#updated_at': 'last_updated_at'
+                    },
+                    ExpressionAttributeValues={
+                        ':r': latest_response_id,
+                        ':u': current_timestamp
+                    }
+                )
+            print("DB update complete.")
 
 def lambda_handler(event, context):
     """ Lambda 主要進入點，這裡負責將請求路由到正確的處理函式 """
     http_method = event.get('httpMethod')
     path = event.get('path')
 
-    is_streaming_request = (http_method == 'POST' and path == '/message')
+    print(f"Request received for {http_method} {path}")
 
-    if is_streaming_request:
-        response_stream = event.pop("response_stream", None)
-        event.pop("aws_request_id", None)
-        print(f"Received event: {json.dumps(event)}")
+    if http_method == 'POST' and path == '/message':
+        return handle_new_message_stream(event)
 
-        response_stream.write(
-            b"HTTP/1.1 200 OK\r\n"
-            b"Content-Type: text/plain\r\n"
-            b"Access-Control-Allow-Origin: *\r\n"
-            b"\r\n"
-        )
+    elif http_method == 'GET' and path == '/hello':
+        return handle_get_hello(event)
 
-        try:
-            handle_new_message_stream(event, response_stream)
-        except Exception as e:
-            print(f"Top-level error: {e}")
-            error_msg = json.dumps({"error": "An unexpected error occurred"})
-            response_stream.write(error_msg.encode('utf-8'))
-        finally:
-            if response_stream:
-                response_stream.close()
-
-    else:
-        print(f"Non-streaming request received; {json.dumps(event)}")
-
-        if http_method == 'GET' and path == '/hello':
-            return handle_get_hello(event)
-        if http_method == 'GET' and path == '/conversations':
-            return handle_get_conversations(event)
-        
-        return {
-            "statusCode": 404,
-            "body": json.dumps({"error": "Not Found"})
-        }
+    elif http_method == 'GET' and path == '/conversations':
+        return handle_get_conversations(event)
+    
+    return {
+        "statusCode": 404,
+        "body": json.dumps({"error": "Not Found"})
+    }
