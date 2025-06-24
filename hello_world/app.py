@@ -187,7 +187,7 @@ def lambda_handler(event, context):
     request_context = event.get('requestContext', {})
     http_info = request_context.get('http', {})
     
-    http_method = http_info.get('httpMethod')
+    http_method = http_info.get('method')
     path = http_info.get('path')
 
     print(f"Request received for {http_method} {path}")
