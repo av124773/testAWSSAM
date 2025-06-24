@@ -182,8 +182,13 @@ def handle_new_message_stream(event):
 
 def lambda_handler(event, context):
     """ Lambda 主要進入點，這裡負責將請求路由到正確的處理函式 """
-    http_method = event.get('httpMethod')
-    path = event.get('path')
+    print("Received event:", json.dumps(event))
+
+    request_context = event.get('requestContext', {})
+    http_info = request_context.get('http', {})
+    
+    http_method = http_info.get('httpMethod')
+    path = http_info.get('path')
 
     print(f"Request received for {http_method} {path}")
 
@@ -198,5 +203,6 @@ def lambda_handler(event, context):
     
     return {
         "statusCode": 404,
+        "headers": { "Content-Type": "application/json" },
         "body": json.dumps({"error": "Not Found"})
     }
