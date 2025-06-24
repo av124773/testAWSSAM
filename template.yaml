@@ -43,7 +43,6 @@ Resources:
             Path: /message
             Method: post
             RestApiId: !Ref AIChatroomApiGateway
-            InvokeMode: RESPONSE_STREAM # <-- 啟動回應串流
         GetConversations:
           Type: Api
           Properties:
