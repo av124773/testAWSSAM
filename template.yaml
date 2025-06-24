@@ -32,33 +32,41 @@ Resources:
             TableName: !Ref ConversationTable 
       Events:
         HelloWorld:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: HttpApi
           Properties:
             Path: /hello
             Method: get
-            RestApiId: !Ref AIChatroomApiGateway
+            ApiId: !Ref AIChatroomApiGateway
         PostMessage:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: HttpApi
           Properties:
             Path: /message
             Method: post
-            RestApiId: !Ref AIChatroomApiGateway
+            ApiId: !Ref AIChatroomApiGateway
         GetConversations:
-          Type: Api
+          Type: HttpApi
           Properties:
             Path: /conversations
             Method: get
-            RestApiId: !Ref AIChatroomApiGateway
+            ApiId: !Ref AIChatroomApiGateway
 
   # 顯示定義 API Gateway
   AIChatroomApiGateway:
-    Type: AWS::Serverless::Api
+    Type: AWS::Serverless::HttpApi
     Properties:
-      StageName: Prod
-      Cors:
-        AllowOrigin: "'*'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api_Key,X-Amz-Security-Token'"
-        AllowMethods: "'GET,POST,OPTIONS'"
+      CorsConfiguration:
+        AllowOrigins: 
+          - "*"
+        AllowHeaders: 
+          - "Content-Type"
+          - "X-Amz-Date"
+          - "Authorization"
+          - "X-Api_Key"
+          - "X-Amz-Security-Token"
+        AllowMethods: 
+          - "GET"
+          - "POST"
+          - "OPTIONS"
 
   # 定義 DynamoDB 表
   ConversationTable:
