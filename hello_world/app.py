@@ -89,7 +89,7 @@ def handle_get_conversations(event):
         print(f"Error in handle_get_conversations: {e}")
         return {'statusCode': 500, 'body': json.dumps({'error': 'Internal Server Error', 'details': str(e)})}
 
-def handle_new_message(event):
+def handle_new_message_stream(event, response_stream):
     """ 處理創建新對話 POST /message """
     try:
         body = json.loads(event.get('body', '{}'))
@@ -98,8 +98,10 @@ def handle_new_message(event):
         user_message = body.get('message', '')
         
         if not user_id or not user_message:
-            return {'statusCode': 400, 'body': json.dumps({'error': 'user_id and message are required!'})}
-        
+            error_msg = json.dumps({'error': 'user_id and message are required!'})
+            response_stream.write(error_msg.encode('utf-8'))
+            return
+
         previous_response_id = None
         is_new_conversation = not conversation_id
 
@@ -107,7 +109,7 @@ def handle_new_message(event):
             print(f"User '{user_id}' is starting a NEW conversation.")
             conversation_id = str(uuid.uuid4())
         else: 
-            print(f"User '{user_id}' is continuing conversation '{conversation_id}.'")
+            print(f"User '{user_id}' is continuing conversation '{conversation_id}'.")
             response = table.get_item(Key={'conversation_id': conversation_id})
             if 'Item' in response:
                 previous_response_id = response['Item'].get('latest_response_id')
@@ -118,17 +120,24 @@ def handle_new_message(event):
         
         client = get_openai_client()
         print("Calling OpenAI Responses API...")
-        response_from_openai = client.responses.create(
+        stream = client.responses.create(
             model="gpt-4o",
             input=user_message,
             store=True,
-            previous_response_id=previous_response_id 
+            previous_response_id=previous_response_id,
+            stream=True  # <-- 啟動串流
         )
 
-        latest_response_id = response_from_openai.id
-        reply_message = response_from_openai.output_text
-
-        print(f"Received reply from OpenAI. New response ID: {latest_response_id}")
+        for chunk in stream:
+            if chunk.output and chunk.output.content:
+                for block in chunk.output.content:
+                    if block.type == 'text_delta' and block.text_delta and block.text_delta.value:
+                        text_chunk = block.text_delta.value
+                        response_stream.write(text_chunk.encode('utf-8'))
+        
+        final_response = stream.get_final_response()
+        latest_response_id = final_response.id
+        print(f"Stream finished. Final response ID: {latest_response_id}")
 
         current_timestamp = datetime.now(timezone.utc).isoformat()
         if is_new_conversation:
@@ -158,42 +167,49 @@ def handle_new_message(event):
                 }
             )
 
-        response_body = {
-            'conversation_id': conversation_id,
-            'response_id': latest_response_id,
-            'reply': reply_message
-        }
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps(response_body, ensure_ascii=False)
-        }
     except Exception as e:
-        print(f"Error: {e}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': 'Internal Server Error', 'details': str(e)})
-        }
+        print(f"Error in stream: {e}")
+        error_msg = json.dumps({'error': 'Internal Server Error', 'details': str(e)})
+        response_stream.write(error_msg.encode('utf-8'))
 
 def lambda_handler(event, context):
     """ Lambda 主要進入點，這裡負責將請求路由到正確的處理函式 """
-    print(f"Received event: {json.dumps(event)}")
     http_method = event.get('httpMethod')
     path = event.get('path')
 
-    if http_method == 'GET' and path == '/hello':
-        return handle_get_hello(event)
-    
-    if http_method == 'GET' and path == '/conversations':
-        return handle_get_conversations(event)
+    is_streaming_request = (http_method == 'POST' and path == '/message')
 
-    if http_method == 'POST' and path == '/message':
-        return handle_new_message(event)
+    if is_streaming_request:
+        response_stream = event.pop("response_stream", None)
+        event.pop("aws_request_id", None)
+        print(f"Received event: {json.dumps(event)}")
 
-    return {
-        "statusCode": 404,
-        "body": json.dumps({"error": "Not Found"})
-    }
+        response_stream.write(
+            b"HTTP/1.1 200 OK\r\n"
+            b"Content-Type: text/plain\r\n"
+            b"Access-Control-Allow-Origin: *\r\n"
+            b"\r\n"
+        )
+
+        try:
+            handle_new_message_stream(event, response_stream)
+        except Exception as e:
+            print(f"Top-level error: {e}")
+            error_msg = json.dumps({"error": "An unexpected error occurred"})
+            response_stream.write(error_msg.encode('utf-8'))
+        finally:
+            if response_stream:
+                response_stream.close()
+
+    else:
+        print(f"Non-streaming request received; {json.dumps(event)}")
+
+        if http_method == 'GET' and path == '/hello':
+            return handle_get_hello(event)
+        if http_method == 'GET' and path == '/conversations':
+            return handle_get_conversations(event)
+        
+        return {
+            "statusCode": 404,
+            "body": json.dumps({"error": "Not Found"})
+        }
