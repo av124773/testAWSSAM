@@ -15,25 +15,28 @@ env:
   TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::199310884822:role/aws-sam-cli-managed-test-pipe-PipelineExecutionRole-oM5NKehldbO6
   TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::199310884822:role/aws-sam-cli-managed-test--CloudFormationExecutionRo-pXLN6xqjhIv4
   TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-test-pipeline--artifactsbucket-cars78eqlkqy
-  # If there are functions with "Image" PackageType in your template,
-  # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
-  # testing "sam package" and "sam deploy" commands.
-  # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: us-east-1
+  
+  # 【修改此處】: 取消註解並確認您的 ECR repository 名稱。
+  # SAM 會使用此名稱在您的 AWS 帳號中自動建立 ECR repository。
+  # 格式為: <您的 AWS Account ID>.dkr.ecr.<您的 Region>.amazonaws.com/<您想要的 Repository 名稱>
+  TESTING_IMAGE_REPOSITORY: 199310884822.dkr.ecr.us-east-1.amazonaws.com/testawssam-testing
+  
   PROD_STACK_NAME: testAWSSAM-prod
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::199310884822:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-zMO2lIik2B0H
   PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::199310884822:role/aws-sam-cli-managed-prod--CloudFormationExecutionRo-xdd42Tphsnw7
   PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-prod-pipeline--artifactsbucket-lc7gaokl3eum
-  # If there are functions with "Image" PackageType in your template,
-  # uncomment the line below and add "--image-repository ${PROD_IMAGE_REPOSITORY}" to
-  # prod "sam package" and "sam deploy" commands.
-  # PROD_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   PROD_REGION: us-east-1
+
+  # 【修改此處】: 取消註解並確認您的 ECR repository 名稱 (生產環境)。
+  PROD_IMAGE_REPOSITORY: 199310884822.dkr.ecr.us-east-1.amazonaws.com/testawssam-prod
 
 permissions:
   id-token: write
   contents: read
+
 jobs:
+  # 'test' job 保持不變
   test:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -42,6 +45,7 @@ jobs:
       - run: |
           # trigger the tests here
 
+  # 'delete-feature' job 保持不變
   delete-feature:
     if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
     runs-on: ubuntu-latest
@@ -50,7 +54,6 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -59,7 +62,6 @@ jobs:
           role-session-name: testing-packaging
           role-duration-seconds: 3600
           role-skip-session-tagging: true
-
       - name: Delete feature branch stack
         env:
           FEATURE_BRANCH_NAME: ${{ github.event.ref }}
@@ -69,11 +71,8 @@ jobs:
             --region ${TESTING_REGION} \
             --no-prompts
 
+  # 'build-and-deploy-feature' job 已更新
   build-and-deploy-feature:
-    # this stage is triggered only for feature branches (feature*),
-    # which will build the stack and deploy to a stack named with branch name.
-    # https://github.com/actions/setup-python
-    # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
     if: startsWith(github.ref, 'refs/heads/feature')
     needs: [test]
     runs-on: ubuntu-latest
@@ -82,8 +81,6 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - run: sam build --template ${SAM_TEMPLATE} --use-container
-
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -92,17 +89,27 @@ jobs:
           role-session-name: feature-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
+      
+      # 【新增】: 登入到 Amazon ECR，這是推送映像檔前的必要步驟
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build resources
+        run: sam build --template ${SAM_TEMPLATE} --use-container
 
       - name: Deploy to feature stack in the testing account
         shell: bash
         run: |
+          # 【修改】: 在 sam deploy 指令中加入 --image-repository 參數
           sam deploy --stack-name $(echo ${GITHUB_REF##*/} | tr -cd '[a-zA-Z0-9-]') \
+            --image-repository ${TESTING_IMAGE_REPOSITORY} \
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
+  # 'build-and-package' job 已更新
   build-and-package:
     if: github.ref == 'refs/heads/main'
     needs: [test]
@@ -112,7 +119,6 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container
 
@@ -124,10 +130,16 @@ jobs:
           role-session-name: testing-packaging
           role-duration-seconds: 3600
           role-skip-session-tagging: true
-
+      
+      # 【新增】: 登入到測試環境的 ECR
+      - name: Login to Amazon ECR - Testing
+        uses: aws-actions/amazon-ecr-login@v2
+      
       - name: Upload artifacts to testing artifact buckets
         run: |
+          # 【修改】: 在 sam package 指令中加入 --image-repository 參數
           sam package \
+            --image-repository ${TESTING_IMAGE_REPOSITORY} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --region ${TESTING_REGION} \
             --output-template-file packaged-testing.yaml
@@ -145,10 +157,16 @@ jobs:
           role-session-name: prod-packaging
           role-duration-seconds: 3600
           role-skip-session-tagging: true
+      
+      # 【新增】: 登入到生產環境的 ECR
+      - name: Login to Amazon ECR - Prod
+        uses: aws-actions/amazon-ecr-login@v2
 
       - name: Upload artifacts to production artifact buckets
         run: |
+          # 【修改】: 在 sam package 指令中加入 --image-repository 參數
           sam package \
+            --image-repository ${PROD_IMAGE_REPOSITORY} \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --region ${PROD_REGION} \
             --output-template-file packaged-prod.yaml
@@ -158,6 +176,7 @@ jobs:
           name: packaged-prod.yaml
           path: packaged-prod.yaml
 
+  # 'deploy-testing' job 已更新
   deploy-testing:
     if: github.ref == 'refs/heads/main'
     needs: [build-and-package]
@@ -170,7 +189,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: packaged-testing.yaml
-
       - name: Assume the testing pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -179,10 +197,16 @@ jobs:
           role-session-name: testing-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
-
+      
+      # 【新增】: 登入到 Amazon ECR (即使是部署也要登入，以防萬一)
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        
       - name: Deploy to testing account
         run: |
+          # 【修改】: 在 sam deploy 指令中加入 --image-repository 參數
           sam deploy --stack-name ${TESTING_STACK_NAME} \
+            --image-repository ${TESTING_IMAGE_REPOSITORY} \
             --template packaged-testing.yaml \
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
@@ -190,6 +214,7 @@ jobs:
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE}
 
+  # 'integration-test' job 保持不變
   integration-test:
     if: github.ref == 'refs/heads/main'
     needs: [deploy-testing]
@@ -199,13 +224,11 @@ jobs:
       - run: |
           # trigger the integration tests here
 
+  # 'deploy-prod' job 已更新
   deploy-prod:
     if: github.ref == 'refs/heads/main'
     needs: [integration-test]
     runs-on: ubuntu-latest
-    # Configure GitHub Action Environment to have a manual approval step before deployment to production
-    # https://docs.github.com/en/actions/reference/environments
-    # environment: <configured-environment>
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -214,7 +237,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: packaged-prod.yaml
-
       - name: Assume the prod pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -224,9 +246,15 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
+      # 【新增】: 登入到 Amazon ECR
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        
       - name: Deploy to production account
         run: |
+          # 【修改】: 在 sam deploy 指令中加入 --image-repository 參數
           sam deploy --stack-name ${PROD_STACK_NAME} \
+            --image-repository ${PROD_IMAGE_REPOSITORY} \
             --template packaged-prod.yaml \
             --capabilities CAPABILITY_IAM \
             --region ${PROD_REGION} \

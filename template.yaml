@@ -8,7 +8,7 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 300
+    Timeout: 600
 
 Resources:
   HelloWorldFunction:
@@ -37,18 +37,55 @@ Resources:
             Path: /hello
             Method: get
             ApiId: !Ref AIChatroomApiGateway
-        PostMessage:
-          Type: HttpApi
-          Properties:
-            Path: /message
-            Method: post
-            ApiId: !Ref AIChatroomApiGateway
+        # PostMessage:
+        #   Type: HttpApi
+        #   Properties:
+        #     Path: /message
+        #     Method: post
+        #     ApiId: !Ref AIChatroomApiGateway
         GetConversations:
           Type: HttpApi
           Properties:
             Path: /conversations
             Method: get
             ApiId: !Ref AIChatroomApiGateway
+
+  StreamingMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      Timeout: 600
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref ConversationTable
+          OPENAI_API_KEY_SECRET_NAME: "prod/testAWSSAM/test-key"
+          AWS_REGION_NAME: !Ref AWS::Region
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: 
+                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
+        - DynamoDBCrudPolicy: 
+            TableName: !Ref ConversationTable 
+      Event:
+        StreamApi:
+          Type: FuncitonUrl
+          Properties:
+            AuthType: NONE
+            InvokeMode: RESPONSE_STREAM
+            Cors:
+              AllowOrigins:
+                - "*"
+              AllowHeaders:
+                - "Content-Type"
+              AllowMethods:
+                - "POST"
+    Metadata:
+      # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
+      Dockerfile: Dockerfile
+      DockerContext: ./streaming_message_function
+      DockerTag: stream-func-v1
 
   # 顯示定義 API Gateway
   AIChatroomApiGateway:
@@ -110,3 +147,6 @@ Outputs:
   AIChatroomTableArn:
     Description: "DynamoDB Conversation Table ARN"
     Value: !GetAtt ConversationTable.Arn
+  StreamingMessageApiUrl:
+    Description: "Function URL for the Streaming Message function"
+    Value: !GetAtt StreamingMessageFunctionUrl.FunctionUrl
