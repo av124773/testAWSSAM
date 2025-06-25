@@ -84,7 +84,7 @@ Resources:
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
       Dockerfile: Dockerfile
-      DockerContext: ./streaming_message_function
+      DockerContext: ./streaming_message
       DockerTag: stream-func-v1
 
   # 顯示定義 API Gateway
