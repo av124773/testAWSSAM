@@ -20,7 +20,7 @@ env:
   # 【修改此處】: 取消註解並確認您的 ECR repository 名稱。
   # SAM 會使用此名稱在您的 AWS 帳號中自動建立 ECR repository。
   # 格式為: <您的 AWS Account ID>.dkr.ecr.<您的 Region>.amazonaws.com/<您想要的 Repository 名稱>
-  TESTING_IMAGE_REPOSITORY: 199310884822.dkr.ecr.us-east-1.amazonaws.com/testawssam-testing
+  TESTING_IMAGE_REPOSITORY: 199310884822.dkr.ecr.us-east-1.amazonaws.com/kevin/testawssam-testing
   
   PROD_STACK_NAME: testAWSSAM-prod
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::199310884822:role/aws-sam-cli-managed-prod-pipe-PipelineExecutionRole-zMO2lIik2B0H
@@ -29,7 +29,7 @@ env:
   PROD_REGION: us-east-1
 
   # 【修改此處】: 取消註解並確認您的 ECR repository 名稱 (生產環境)。
-  PROD_IMAGE_REPOSITORY: 199310884822.dkr.ecr.us-east-1.amazonaws.com/testawssam-prod
+  PROD_IMAGE_REPOSITORY: 199310884822.dkr.ecr.us-east-1.amazonaws.com/kevin/testawssam-prod
 
 permissions:
   id-token: write
