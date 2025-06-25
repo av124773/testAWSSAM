@@ -68,7 +68,7 @@ Resources:
                 !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
-      Event:
+      Events:
         StreamApi:
           Type: FuncitonUrl
           Properties:
