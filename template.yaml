@@ -58,8 +58,7 @@ Resources:
           AWS_REGION_NAME: !Ref AWS::Region
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: 
-                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key"
+            SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
       Events:
