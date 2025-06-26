@@ -50,7 +50,7 @@ Resources:
       PackageType: Image
       CodeUri: streaming_message/
       ImageConfig:
-        Command:
+        EntryPoint:
           - "uvicorn"
           - "stream_api:app"
           - "--host"
