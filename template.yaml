@@ -51,6 +51,16 @@ Resources:
       Architectures:
         - x86_64
       Timeout: 300
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: RESPONSE_STREAM
+        Cors:
+          AllowOrigins:
+            - "*"
+          AllowHeaders:
+            - "Content-Type"
+          AllowMethods:
+            - "POST"
       Environment:
         Variables:
           DYNAMODB_TABLE_NAME: !Ref ConversationTable
@@ -61,19 +71,19 @@ Resources:
             SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
-      Events:
-        StreamApi:
-          Type: FunctionUrl
-          Properties:
-            AuthType: NONE
-            InvokeMode: RESPONSE_STREAM
-            Cors:
-              AllowOrigins:
-                - "*"
-              AllowHeaders:
-                - "Content-Type"
-              AllowMethods:
-                - "POST"
+      # Events:
+      #   StreamApi:
+      #     Type: FunctionUrl
+      #     Properties:
+      #       AuthType: NONE
+      #       InvokeMode: RESPONSE_STREAM
+      #       Cors:
+      #         AllowOrigins:
+      #           - "*"
+      #         AllowHeaders:
+      #           - "Content-Type"
+      #         AllowMethods:
+      #           - "POST"
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
       Dockerfile: Dockerfile
@@ -140,6 +150,7 @@ Outputs:
   AIChatroomTableArn:
     Description: "DynamoDB Conversation Table ARN"
     Value: !GetAtt ConversationTable.Arn
-  StreamingMessageApiUrl:
+  StreamingMessageFunctionUrl:
     Description: "Function URL for the Streaming Message function"
-    Value: !GetAtt StreamingMessageFunctionStreamApiUrl.FunctionUrl
+    Value: !GetAtt StreamingMessageFunction.Url
+
