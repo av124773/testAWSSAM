@@ -37,12 +37,6 @@ Resources:
             Path: /hello
             Method: get
             ApiId: !Ref AIChatroomApiGateway
-        # PostMessage:
-        #   Type: HttpApi
-        #   Properties:
-        #     Path: /message
-        #     Method: post
-        #     ApiId: !Ref AIChatroomApiGateway
         GetConversations:
           Type: HttpApi
           Properties:
@@ -70,7 +64,7 @@ Resources:
             TableName: !Ref ConversationTable 
       Events:
         StreamApi:
-          Type: FuncitonUrl
+          Type: FunctionUrl
           Properties:
             AuthType: NONE
             InvokeMode: RESPONSE_STREAM
@@ -137,7 +131,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
     Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${AIChatroomApiGateway}.execute-api.${AWS::Region}.amazonaws.com/hello"
+    Value: !Sub "https://${AIChatroomApiGateway}.execute-api.${AWS::Region}.amazonaws.com/"
   HelloWorldFunction:
     Description: "Hello World Lambda Function ARN"
     Value: !GetAtt HelloWorldFunction.Arn
