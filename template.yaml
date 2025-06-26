@@ -27,7 +27,7 @@ Resources:
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: 
-                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
+                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
       Events:
@@ -59,7 +59,7 @@ Resources:
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: 
-                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
+                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
       Events:
