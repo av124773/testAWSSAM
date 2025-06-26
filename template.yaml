@@ -15,7 +15,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: hello_world/
-      Handler: app.lambda_handler
+      Handler: hello_api.lambda_handler
       Runtime: python3.10
       Architectures:
         - x86_64
@@ -48,6 +48,15 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
+      CodeUri: streaming_message/
+      ImageConfig:
+        Command:
+          - "uvicorn"
+          - "stream_api:app"
+          - "--host"
+          - "0.0.0.0"
+          - "--port"
+          - "8000"
       Architectures:
         - x86_64
       Timeout: 300
