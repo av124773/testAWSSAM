@@ -8,7 +8,7 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 600
+    Timeout: 300
 
 Resources:
   HelloWorldFunction:
@@ -50,7 +50,7 @@ Resources:
       PackageType: Image
       Architectures:
         - x86_64
-      Timeout: 600
+      Timeout: 300
       Environment:
         Variables:
           DYNAMODB_TABLE_NAME: !Ref ConversationTable
@@ -143,4 +143,4 @@ Outputs:
     Value: !GetAtt ConversationTable.Arn
   StreamingMessageApiUrl:
     Description: "Function URL for the Streaming Message function"
-    Value: !GetAtt StreamingMessageFunctionUrl.FunctionUrl
+    Value: !GetAtt StreamingMessageFunctionStreamApiUrl.FunctionUrl
