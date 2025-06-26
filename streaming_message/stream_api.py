@@ -15,6 +15,8 @@ dynamodb_resource = boto3.resource('dynamodb')
 table = dynamodb_resource.Table(DYNAMODB_TABLE_NAME)
 openai_client = None
 
+app = FastAPI()
+
 def get_openai_client():
     """
     取得 OpenAI 客戶端物件與讀取 Secret，並將其儲存至全域變數 openai_client
