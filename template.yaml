@@ -84,7 +84,7 @@ Resources:
         StreamApi:
           Type: HttpApi
           Properties:
-            Path: /Message
+            Path: /message
             Method: POST
             ApiId: !Ref AIChatroomApiGateway
     Metadata:
