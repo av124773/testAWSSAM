@@ -127,5 +127,6 @@ async def stream_generator(body: dict):
 async def handle_new_message_stream(request: Request):
     """ FastAPI 進入點，接收請求並回傳串流回應 """
     body = await request.json()
+    print(f"Stream_api get request: ", json.dumps(request))
     return StreamingResponse(stream_generator(body), media_type="text/event-stream")
     
