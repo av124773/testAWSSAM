@@ -85,7 +85,7 @@ Resources:
           Type: HttpApi
           Properties:
             Path: /Message
-            Mehtod: POST
+            Method: POST
             ApiId: !Ref AIChatroomApiGateway
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
