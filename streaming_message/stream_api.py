@@ -128,7 +128,11 @@ async def stream_generator(body: dict):
 @app.post("/message")
 async def handle_new_message_stream(request: Request):
     """ FastAPI 進入點，接收請求並回傳串流回應 """
-    body = await request.json()
-    print(f"Stream_api get request: ", json.dumps(request))
-    return StreamingResponse(stream_generator(body), media_type="text/event-stream")
-    
+    try:
+        body = await request.json()
+        print("Stream_api got request: ", body)
+        return StreamingResponse(stream_generator(body), media_type="text/event-stream")
+    except:
+        print("Error in /message handler:", e)
+        traceback.print_exc()
+        raise
