@@ -152,5 +152,5 @@ Outputs:
     Value: !GetAtt ConversationTable.Arn
   StreamingMessageFunctionUrl:
     Description: "Function URL for the Streaming Message function"
-    Value: !GetAtt StreamingMessageFunction.Url
+    Value: !GetAtt StreamingMessageFunctionUrl.FunctionUrl
 
