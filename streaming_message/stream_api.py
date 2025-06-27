@@ -94,9 +94,11 @@ async def stream_generator(body: dict):
 
         for event in stream:
             print("stream event: ",event)
-            if isinstance(event, openai.types.beta.responses.ResponseChunk):
-                if event.output_text:
-                    yield event.output_text.encode("utf-8")
+            if hasattr(event, 'output_text') and event.output_text is not None:
+                yield event.output_text.encode("utf-8")
+            # if isinstance(event, openai.types.beta.responses.ResponseChunk):
+            #     if event.output_text:
+            #         yield event.output_text.encode("utf-8")
 
         # for chunk in stream:
         #     if chunk.output and chunk.output.content:
