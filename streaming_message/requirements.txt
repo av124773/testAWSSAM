@@ -2,4 +2,3 @@ fastapi
 uvicorn
 openai
 boto3
-traceback
