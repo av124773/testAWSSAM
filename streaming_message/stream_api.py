@@ -96,7 +96,7 @@ async def stream_generator(body: dict):
         
     except Exception as e:
         print(f"Error in stream: {e}")
-        traceback.pront_exc()
+        traceback.print_exc()
         yield json.dumps({'error': 'An error occurred during streaming.'}).encode('utf-8')
 
     finally:
