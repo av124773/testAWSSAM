@@ -79,19 +79,24 @@ async def stream_generator(body: dict):
             stream=True  # <-- 啟動串流
         )
 
-        for chunk in stream:
-            if chunk.output and chunk.output.content:
-                for block in chunk.output.content:
-                    if block.type == 'text_delta' and block.text_delta and block.text_delta.value:
-                        text_chunk = block.text_delta.value
-                        yield text_chunk.encode('utf-8')
+        for event in stream:
+            if hasattr(event, "output_text") and event.output_text:
+                yield event.output_text.encode("utf-8")
+
+        # for chunk in stream:
+        #     if chunk.output and chunk.output.content:
+        #         for block in chunk.output.content:
+        #             if block.type == 'text_delta' and block.text_delta and block.text_delta.value:
+        #                 text_chunk = block.text_delta.value
+        #                 yield text_chunk.encode('utf-8')
         
         final_response = stream.get_final_response()
-        if final_response:
+        if final_response and hasattr(final_response, "id"):
             latest_response_id = final_response.id
         
     except Exception as e:
         print(f"Error in stream: {e}")
+        traceback.pront_exc()
         yield json.dumps({'error': 'An error occurred during streaming.'}).encode('utf-8')
 
     finally:
