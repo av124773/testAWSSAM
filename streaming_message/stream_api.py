@@ -49,6 +49,7 @@ async def stream_generator(body: dict):
     user_id = body.get('user_id')
     user_message = body.get('message', '')
     is_new_conversation = not conversation_id
+    stream = None
 
     try:
         if not user_id or not user_message:
@@ -80,8 +81,9 @@ async def stream_generator(body: dict):
         )
 
         for event in stream:
-            if hasattr(event, "output_text") and event.output_text:
-                yield event.output_text.encode("utf-8")
+            if isinstance(event, openai.types.beta.responses.ResponseChunk):
+                if event.output_text:
+                    yield event.output_text.encode("utf-8")
 
         # for chunk in stream:
         #     if chunk.output and chunk.output.content:
