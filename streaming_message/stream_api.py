@@ -93,23 +93,15 @@ async def stream_generator(body: dict):
         )
 
         for event in stream:
-            print("stream event: ",event)
-            if hasattr(event, 'output_text') and event.output_text is not None:
-                yield event.output_text.encode("utf-8")
-            # if isinstance(event, openai.types.beta.responses.ResponseChunk):
-            #     if event.output_text:
-            #         yield event.output_text.encode("utf-8")
+            if event.type == 'response.created':
+                latest_response_id = event.response.id
+                print(f"DEBUG: Captured Response ID: {latest_response_id}")
 
-        # for chunk in stream:
-        #     if chunk.output and chunk.output.content:
-        #         for block in chunk.output.content:
-        #             if block.type == 'text_delta' and block.text_delta and block.text_delta.value:
-        #                 text_chunk = block.text_delta.value
-        #                 yield text_chunk.encode('utf-8')
-        
-        final_response = stream.get_final_response()
-        if final_response and hasattr(final_response, "id"):
-            latest_response_id = final_response.id
+            if event.type == 'response.output_text.delta':
+                if event.delta:
+                    yield event.output_text.encode("utf-8")
+
+        print("DEBUG: Stream iteration finished.")
         
     except Exception as e:
         print(f"Error in stream: {e}")
