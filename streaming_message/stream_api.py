@@ -44,19 +44,31 @@ async def stream_generator(body: dict):
     處理創建新對話 POST /message 
     串流生成器
     """
+    print("DEBUG: stream_generator has started.")
+
     latest_response_id = None
+
     conversation_id = body.get('conversation_id')
+    print(f"DEBUG: conversation_id = {conversation_id}")
+
     user_id = body.get('user_id')
+    print(f"DEBUG: user_id = {user_id}")
+
     user_message = body.get('message', '')
+    print(f"DEBUG: user_message received: {'Yes' if user_message else 'No'}")
+
     is_new_conversation = not conversation_id
     stream = None
 
     try:
         if not user_id or not user_message:
+            print("DEBUG: user_id or message is missing. Yielding error.")
             yield json.dumps({'error': 'user_id and message are required!'}).encode('utf-8')
             return
 
         previous_response_id = None
+        print(f"DEBUG: is_new_conversation = {is_new_conversation}")
+
         if is_new_conversation:
             print(f"User '{user_id}' is starting a NEW conversation.")
             conversation_id = str(uuid.uuid4())
@@ -136,14 +148,21 @@ async def stream_generator(body: dict):
 @app.post("/message")
 async def handle_new_message_stream(request: Request):
     """ FastAPI 進入點，接收請求並回傳串流回應 """
-    body = await request.json()
-    print("Request body: ", body)
+    print("DEBUG: Entered handle_new_message_stream function.")
     try:
-        return StreamingResponse(stream_generator(body), media_type="text/event-stream")
-    except Exception:
+        print("DEBUG: Awaiting request.json().")
+        body = await request.json()
+        print(f"DEBUG: Request body parsed successfully: {body}")
+        
+        print("DEBUG: Creating StreamingResponse with stream_generator.")
+        response = StreamingResponse(stream_generator(body), media_type="text/plain")
+        print("DEBUG: StreamingResponse object created. Returning response.")
+        return response
+        
+    except Exception as e:
+        print(f"FATAL: Exception in handle_new_message_stream: {e}")
         traceback.print_exc()
-        return StreamingResponse(
-            (json.dumps({"error": "Internal server error"}).encode("utf-8") for _ in [0]),
-            media_type="application/json",
-            status_code=500
-        )
+        # 如果請求解析失敗，回傳一個標準的 JSON 錯誤
+        return { "error": "Failed to process request body.", "details": str(e) }
+
+
