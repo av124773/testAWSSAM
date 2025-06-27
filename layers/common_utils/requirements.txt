@@ -1,0 +1,4 @@
+openai==1.92.2
+boto3
+pydantic
+pydantic-settings
