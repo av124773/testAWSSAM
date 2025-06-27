@@ -93,15 +93,18 @@ async def stream_generator(body: dict):
         )
 
         for event in stream:
+            print(f"DEBUG: Processing event of type: '{event.type}'")
             if event.type == 'response.created':
+                print("DEBUG: 'response.created' event FOUND. Attempting to capture ID.")
                 latest_response_id = event.response.id
                 print(f"DEBUG: Captured Response ID: {latest_response_id}")
 
             if event.type == 'response.output_text.delta':
                 if event.delta:
-                    yield event.output_text.encode("utf-8")
+                    yield event.delta.encode("utf-8")
 
-        print("DEBUG: Stream iteration finished.")
+        print(f"DEBUG: Loop finished. Final value of latest_response_id is: '{latest_response_id}'")
+
         
     except Exception as e:
         print(f"Error in stream: {e}")
