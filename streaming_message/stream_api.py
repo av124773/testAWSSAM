@@ -93,6 +93,7 @@ async def stream_generator(body: dict):
         )
 
         for event in stream:
+            print("stream event: ",event)
             if isinstance(event, openai.types.beta.responses.ResponseChunk):
                 if event.output_text:
                     yield event.output_text.encode("utf-8")
