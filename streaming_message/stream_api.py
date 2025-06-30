@@ -1,13 +1,11 @@
 import uuid
 import traceback
-import json
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
 from common.aws_clients import get_dynamodb_table, get_openai_client
 from common.models import MessageRequest
-from common.config import settings
 
 app = FastAPI()
 
@@ -57,7 +55,7 @@ async def stream_generator(req: MessageRequest):
         
         client = get_openai_client()
         print("Calling OpenAI Responses API...")
-        stream = await client.responses.create(
+        stream = client.responses.create(
             model="gpt-4o",
             input=user_message,
             store=True,
@@ -65,7 +63,7 @@ async def stream_generator(req: MessageRequest):
             stream=True  # <-- 啟動串流
         )
 
-        async for event in stream:
+        for event in stream:
             print(f"DEBUG: Processing event of type: '{event.type}'")
             if event.type == 'response.created':
                 print("DEBUG: 'response.created' event FOUND. Attempting to capture ID.")
