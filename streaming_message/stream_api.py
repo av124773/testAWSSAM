@@ -3,7 +3,6 @@ import traceback
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
-
 from common.aws_clients import get_dynamodb_table, get_openai_client
 from common.models import MessageRequest
 
@@ -77,7 +76,6 @@ async def stream_generator(req: MessageRequest):
 
         print(f"DEBUG: Loop finished. Final value of latest_response_id is: '{latest_response_id}'")
 
-        
     except Exception as e:
         print(f"Error in stream: {e}")
         traceback.print_exc()
