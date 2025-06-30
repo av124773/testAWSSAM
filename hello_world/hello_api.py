@@ -60,17 +60,28 @@ def lambda_handler(event, context):
     """ Lambda 主要進入點，這裡負責將請求路由到正確的處理函式 """
     print("Received event:", json.dumps(event))
 
-    method = event.get('method')
-    path = event.get('path')
+    try:
+        request_context = event.get('requestContext', {})
+        http_info = request_context.get('http', {}) 
 
-    print(f"Request received for {method} {path}")
+        method = http_info.get('method')
+        path = http_info.get('path')
 
-    if method == 'GET' and path == '/hello':
-        return handle_get_hello(event)
+        print(f"Request received for {method} {path}")
 
-    elif method == 'GET' and path == '/conversations':
-        return handle_get_conversations(event, context)
-    
+        if method == 'GET' and path == '/hello':
+            return handle_get_hello(event)
+
+        if method == 'GET' and path == '/conversations':
+            return handle_get_conversations(event, context)
+            
+    except Exception as e:
+        print(f"Error processing request: {e}")
+        return {
+            "statusCode": 500,
+            "headers": { "Content-Type": "application/json" },
+            "body": json.dumps({"error": "Internal server error"})
+        }
     return {
         "statusCode": 404,
         "headers": { "Content-Type": "application/json" },
