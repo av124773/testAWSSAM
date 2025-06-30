@@ -14,7 +14,7 @@ Resources:
   CommonUtilsLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: !Sub "{AWS::StackName}-CommonUtilsLayer"
+      LayerName: !Sub "${AWS::StackName}-CommonUtilsLayer"
       Description: "Common config, client and data model"
       ContentUri: layers/common_utils/
       CompatibleRuntimes:
