@@ -1,4 +1,5 @@
 import json
+import datetime
 from common.aws_clients import get_dynamodb_table
 
 table = get_dynamodb_table()
@@ -74,7 +75,7 @@ def lambda_handler(event, context):
 
         if method == 'GET' and path == '/conversations':
             return handle_get_conversations(event, context)
-            
+
     except Exception as e:
         print(f"Error processing request: {e}")
         return {
