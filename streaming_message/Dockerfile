@@ -18,11 +18,11 @@ ENV PORT=8000
 WORKDIR ${LAMBDA_TASK_ROOT}
 
 # 將共用程式碼目錄複製到映像中
-COPY ../layers/common_utils/python/common ./common
+COPY layers/common_utils/python/common ./common
 
-COPY requirements.txt ./
+COPY streaming_message/requirements.txt ./
 RUN pip install -r requirements.txt
 
-COPY stream_api.py ./
+COPY streaming_message/stream_api.py ./
 
 ENTRYPOINT ["uvicorn", "stream_api:app", "--host", "0.0.0.0", "--port", "8000"]
