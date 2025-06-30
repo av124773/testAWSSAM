@@ -94,7 +94,7 @@ Resources:
             TableName: !Ref ConversationTable 
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
-      Dockerfile: Dockerfile
+      Dockerfile: streaming_message/Dockerfile
       DockerContext: .
       DockerTag: stream-func-v1
 
