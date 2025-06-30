@@ -92,8 +92,6 @@ Resources:
             SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
-      Layers:
-        - !Ref CommonUtilsLayer
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
       Dockerfile: Dockerfile

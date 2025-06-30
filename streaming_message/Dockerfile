@@ -17,6 +17,9 @@ ENV PORT=8000
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 
+# 將共用程式碼目錄複製到映像中
+COPY ../common ./common
+
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
