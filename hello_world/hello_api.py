@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 from common.aws_clients import get_dynamodb_table
+from common.config import settings
 
 table = get_dynamodb_table()
 
@@ -12,8 +13,8 @@ def handle_get_hello(event):
         'message': 'Hello from your AI Chatroom backend. And test.',
         'status': 'OK',
         'timestamp': datetime.now(timezone.utc).isoformat(),
-        'OPENAI_API_KEY_SECRET_NAME': OPENAI_API_KEY_SECRET_NAME,
-        'AWS_REGION_NAME': AWS_REGION_NAME
+        'OPENAI_API_KEY_SECRET_NAME': settings.OPENAI_API_KEY_SECRET_NAME,
+        'AWS_REGION_NAME': settings.AWS_REGION_NAME
     }
     return {
         'statusCode': 200,
