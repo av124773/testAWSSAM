@@ -16,7 +16,7 @@ Resources:
     Properties:
       LayerName: !Sub "{AWS::StackName}-CommonUtilsLayer"
       Description: "Common config, client and data model"
-      ContentUrl: layers/common_utils/
+      ContentUri: layers/common_utils/
       CompatibleRuntimes:
         - python3.10
       RetentionPolicy: Retain
