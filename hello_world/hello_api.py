@@ -1,5 +1,5 @@
 import json
-import datetime
+from datetime import datetime, timezone
 from common.aws_clients import get_dynamodb_table
 
 table = get_dynamodb_table()
