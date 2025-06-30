@@ -117,4 +117,5 @@ async def stream_generator(req: MessageRequest):
 @app.post("/message")
 async def handle_new_message_stream(request: MessageRequest):
     """ FastAPI 進入點，接收請求並回傳串流回應 """
+    print("DEBUG: This is handle_new_message_stream")
     return StreamingResponse(stream_generator(request), medio_type='text/plain')

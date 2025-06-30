@@ -62,7 +62,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
-      CodeUri: streaming_message/
+      # CodeUri: streaming_message/
       ImageConfig:
         EntryPoint:
           - "uvicorn"
