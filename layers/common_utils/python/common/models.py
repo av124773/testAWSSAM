@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import optional
+from typing import Optional
 
 class MessageRequest(BaseModel):
     user_id: str
