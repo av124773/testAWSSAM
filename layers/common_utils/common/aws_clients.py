@@ -17,4 +17,4 @@ def get_openai_client() -> openai.OpenAI:
     get_secret_value_response = secrets_client.get_secret_value(SecretId=settings.OPENAI_API_KEY_SECRET_NAME)
     secret = json.loads(get_secret_value_response['SecretString'])
     api_key = secret['OPENAI_API_KEY']
-    return openai.OpenAI(api_key=api_key)
+    return openai.AsyncOpenAI(api_key=api_key)
