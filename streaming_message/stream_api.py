@@ -29,9 +29,10 @@ async def stream_generator(req: MessageRequest):
 
     is_new_conversation = not conversation_id
     stream = None
-    table = get_dynamodb_table
 
     try:
+        table = get_dynamodb_table()
+
         if not user_id or not user_message:
             print("DEBUG: user_id or message is missing. Yielding error.")
             yield json.dumps({'error': 'user_id and message are required!'}).encode('utf-8')
