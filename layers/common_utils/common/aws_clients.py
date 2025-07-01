@@ -6,7 +6,7 @@ from .config import settings
 
 @lru_cache(maxsize=1)
 def get_dynamodb_table():
-    print("Initalizing DynamoDB table resource...")
+    print("Initializing DynamoDB table resource...")
     dynamodb = boto3.resource('dynamodb', region_name=settings.AWS_REGION_NAME)
     return dynamodb.Table(settings.DYNAMODB_TABLE_NAME)
 

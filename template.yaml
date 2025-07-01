@@ -11,24 +11,33 @@ Globals:
     Timeout: 300
 
 Resources:
-  CommonUtilsLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: !Sub "${AWS::StackName}-CommonUtilsLayer"
-      Description: "Common config, client and data model"
-      ContentUri: layers/common_utils/
-      CompatibleRuntimes:
-        - python3.10
-      RetentionPolicy: Retain
-    Metadata:
-      BuildMethod: python3.10
+  # CommonUtilsLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: !Sub "${AWS::StackName}-CommonUtilsLayer"
+  #     Description: "Common config, client and data model"
+  #     ContentUri: layers/common_utils/
+  #     CompatibleRuntimes:
+  #       - python3.10
+  #     RetentionPolicy: Retain
+  #   Metadata:
+  #     BuildMethod: python3.10
 
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      PackageType: Image
       CodeUri: hello_world/
-      Handler: hello_api.lambda_handler
-      Runtime: python3.10
+      # Handler: hello_api.lambda_handler
+      # Runtime: python3.10
+      ImageConfig:
+        EntryPoint:
+          - "uvicorn"
+          - "hello_api:app"
+          - "--host"
+          - "0.0.0.0"
+          - "--port"
+          - "8000"
       Architectures:
         - x86_64
       Environment:
@@ -39,7 +48,7 @@ Resources:
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: 
-                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
+                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-*"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
       Events:
@@ -55,8 +64,13 @@ Resources:
             Path: /conversations
             Method: get
             ApiId: !Ref AIChatroomApiGateway
-      Layers:
-        - !Ref CommonUtilsLayer
+      # Layers:
+      #   - !Ref CommonUtilsLayer
+    Metadata:
+      # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
+      Dockerfile: hello_world/Dockerfile
+      DockerContext: .
+      DockerTag: python3.10-v1
 
   StreamingMessageFunction:
     Type: AWS::Serverless::Function
@@ -91,7 +105,8 @@ Resources:
           AWS_REGION_NAME: !Ref AWS::Region
       Policies:
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-3N5hAV"
+            SecretArn: 
+                !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:prod/testAWSSAM/test-key-*"
         - DynamoDBCrudPolicy: 
             TableName: !Ref ConversationTable 
     Metadata:
