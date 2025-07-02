@@ -11,8 +11,6 @@ class HelloResponse(BaseModel):
     message: str
     status: str
     timestamp: datetime
-    OPENAI_API_KEY_SECRET_NAME: str
-    AWS_REGION_NAME: str
 
 class ConversationItem(BaseModel):
     conversation_id: str
