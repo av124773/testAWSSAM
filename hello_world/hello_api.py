@@ -2,7 +2,6 @@ import json
 from datetime import datetime, timezone
 from fastapi import FastAPI, Query, HTTPException
 from common.aws_clients import get_dynamodb_table
-from common.config import settings
 from common.models import HelloResponse, ConversationItem, ConversationResponse
 
 app = FastAPI()
@@ -19,9 +18,7 @@ async def get_hello():
     return {
         'message': 'Hello from your AI Chatroom backend. And test.',
         'status': 'OK',
-        'timestamp': datetime.now(timezone.utc).isoformat(),
-        'OPENAI_API_KEY_SECRET_NAME': settings.OPENAI_API_KEY_SECRET_NAME,
-        'AWS_REGION_NAME': settings.AWS_REGION_NAME
+        'timestamp': datetime.now(timezone.utc).isoformat()
     }
 
 @app.get("/conversations", response_model=ConversationResponse)
