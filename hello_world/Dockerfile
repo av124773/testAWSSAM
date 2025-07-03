@@ -9,7 +9,10 @@ ENV PORT=8000
 WORKDIR ${LAMBDA_TASK_ROOT}
 
 # 將共用程式碼目錄複製到映像中
-COPY layers/common_utils/common ./common
+# COPY layers/common_utils/common ./common
+
+COPY layers/common_utils/dist/common_utils-0.1.0-py3-none-any.whl .
+RUN pip install common_utils-0.1.0-py3-none-any.whl
 
 COPY hello_world/requirements.txt ./
 RUN pip install -r requirements.txt

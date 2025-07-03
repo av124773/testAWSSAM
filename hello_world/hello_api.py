@@ -1,9 +1,9 @@
 import json
 from datetime import datetime, timezone
 from fastapi import FastAPI, Query, HTTPException
-from common.aws_clients import get_dynamodb_table
-from common.config import settings
-from common.models import HelloResponse, ConversationItem, ConversationResponse
+from common_utils.aws_clients import get_dynamodb_table
+from common_utils.config import settings
+from common_utils.models import HelloResponse, ConversationItem, ConversationResponse
 
 app = FastAPI()
 table = get_dynamodb_table()
