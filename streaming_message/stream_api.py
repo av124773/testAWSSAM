@@ -4,8 +4,8 @@ import json
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
-from common.aws_clients import get_dynamodb_table, get_openai_client
-from common.models import MessageRequest
+from common_utils.aws_clients import get_dynamodb_table, get_openai_client
+from common_utils.models import MessageRequest
 
 app = FastAPI()
 
