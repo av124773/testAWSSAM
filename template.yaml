@@ -27,7 +27,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       PackageType: Image
-      CodeUri: hello_world/
+      CodeUri: function/hello_world/
       # Handler: hello_api.lambda_handler
       # Runtime: python3.10
       ImageConfig:
@@ -76,7 +76,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       PackageType: Image
-      CodeUri: streaming_message/
+      CodeUri: function/streaming_message/
       ImageConfig:
         EntryPoint:
           - "uvicorn"
