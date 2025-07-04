@@ -102,6 +102,9 @@ jobs:
           cd layers/common_utils
           python -m build
 
+      - name: Check is wheel exist
+        run: ls -l layers/common_utils/dist/
+
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container
 
@@ -134,6 +137,9 @@ jobs:
           pip install build
           cd layers/common_utils
           python -m build
+
+      - name: Check is wheel exist
+        run: ls -l layers/common_utils/dist/
 
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container
