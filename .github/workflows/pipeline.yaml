@@ -96,6 +96,12 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Build wheel for common_utils
+        run: |
+          pip install build
+          cd layers/common_utils
+          python -m build
+
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container
 
@@ -122,6 +128,13 @@ jobs:
         with:
           version: 1.141.0
           use-installer: true
+
+      - name: Build wheel for common_utils
+        run: |
+          pip install build
+          cd layers/common_utils
+          python -m build
+
       - name: Build resources
         run: sam build --template ${SAM_TEMPLATE} --use-container
 
