@@ -11,18 +11,6 @@ Globals:
     Timeout: 300
 
 Resources:
-  # CommonUtilsLayer:
-  #   Type: AWS::Serverless::LayerVersion
-  #   Properties:
-  #     LayerName: !Sub "${AWS::StackName}-CommonUtilsLayer"
-  #     Description: "Common config, client and data model"
-  #     ContentUri: layers/common_utils/
-  #     CompatibleRuntimes:
-  #       - python3.10
-  #     RetentionPolicy: Retain
-  #   Metadata:
-  #     BuildMethod: python3.10
-
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -68,7 +56,7 @@ Resources:
       #   - !Ref CommonUtilsLayer
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
-      Dockerfile: hello_world/Dockerfile
+      Dockerfile: function/hello_world/Dockerfile
       DockerContext: .
       DockerTag: python3.10-v1
 
@@ -111,7 +99,7 @@ Resources:
             TableName: !Ref ConversationTable 
     Metadata:
       # Metadata 區塊告訴 SAM 如何建置 Docker 映像檔
-      Dockerfile: streaming_message/Dockerfile
+      Dockerfile: function/streaming_message/Dockerfile
       DockerContext: .
       DockerTag: stream-func-v1
 
